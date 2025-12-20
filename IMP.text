@@ -1,0 +1,21 @@
+venv\Scripts\activate  #generally need to activate it every time you open a new terminal window for that project.
+
+
+
+Keep Your Project Updated
+
+Whenever you make changes:
+
+git add .
+git commit -m "Describe what changed"
+git push
+
+
+
+!!! -> Totrain_model.py
+
+
+Test Test
+Test Test
+Test Test
+Test Test
