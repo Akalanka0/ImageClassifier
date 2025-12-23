@@ -1,96 +1,176 @@
-# src/gui_cats_dogs_modern.py
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import numpy as np
-import os
+import ctypes
 
 # =========================
 # Load trained model
 # =========================
 model_path = r"D:\Test\ImageClassifier\models\cats_dogs_model.keras"
+
 try:
     model = load_model(model_path)
-    print(f"Model loaded from '{model_path}'")
+    print("Model loaded successfully")
 except Exception as e:
-    print(f"Error loading model: {e}")
+    print("Error loading model:", e)
     exit()
 
-# Image size expected by the model
-img_width, img_height = 160, 160
+IMG_WIDTH, IMG_HEIGHT = 160, 160
 
 # =========================
 # Prediction function
 # =========================
 def predict_image(img_path):
     try:
-        img = Image.open(img_path).convert('RGB')
-        img_resized = img.resize((img_width, img_height))
-        img_array = np.array(img_resized) / 255.0
-        img_array = np.expand_dims(img_array, axis=0)  
+        img = Image.open(img_path).convert("RGB")
+        img = img.resize((IMG_WIDTH, IMG_HEIGHT))
+        img_array = np.array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
 
-        pred = model.predict(img_array)
-        probs = tf.nn.softmax(pred, axis=1).numpy()
-        class_idx = probs.argmax()
-        confidence = probs[0][class_idx]
+        preds = model.predict(img_array)
+        probs = tf.nn.softmax(preds, axis=1).numpy()
+        idx = np.argmax(probs)
+        confidence = probs[0][idx]
 
-        class_names = ['Cat', 'Dog']
-        threshold = 0.55  
+        class_names = ["Cat", "Dog"]
+        threshold = 0.55
 
         if confidence < threshold:
-            return "Unknown object", confidence
-        else:
-            return class_names[class_idx], confidence
+            return "Unknown", confidence
+        return class_names[idx], confidence
+
     except Exception as e:
-        messagebox.showerror("Error", f"Prediction failed: {e}")
+        messagebox.showerror("Error", str(e))
         return None, None
 
 # =========================
-# GUI functions
+# Upload image function
 # =========================
 def upload_image():
-    file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png")])
-    if file_path:
-        try:
-            img = Image.open(file_path)
-            img.thumbnail((300, 300))
-            img_tk = ImageTk.PhotoImage(img)
-            img_label.configure(image=img_tk)
-            img_label.image = img_tk
+    path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg *.jpeg *.png")])
+    if not path:
+        return
+    try:
+        img = Image.open(path)
+        img.thumbnail((340, 340))
+        img_tk = ImageTk.PhotoImage(img)
 
-            pred_class, confidence = predict_image(file_path)
-            if pred_class:
-                result_label.configure(text=f"{pred_class} (Confidence: {confidence:.2f})")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to open image: {e}")
+        img_label.configure(image=img_tk, text="")
+        img_label.image = img_tk
+
+        result, conf = predict_image(path)
+        if result:
+            result_label.configure(text=f"{result}\nConfidence: {conf:.2f}")
+
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
 
 # =========================
-# Modern GUI Layout
+# Fullscreen toggle
 # =========================
-ctk.set_appearance_mode("Dark")  
-ctk.set_default_color_theme("blue") 
+is_fullscreen = False
+
+def toggle_fullscreen(event=None):
+    global is_fullscreen
+    is_fullscreen = not is_fullscreen
+    app.attributes("-fullscreen", is_fullscreen)
+
+def exit_fullscreen(event=None):
+    global is_fullscreen
+    is_fullscreen = False
+    app.attributes("-fullscreen", False)
+
+# ==============
+# Center window 
+# ==============
+def center_window():
+    hwnd = ctypes.windll.user32.GetForegroundWindow()
+    screen_width = ctypes.windll.user32.GetSystemMetrics(0)
+    screen_height = ctypes.windll.user32.GetSystemMetrics(1)
+
+    x = (screen_width - WINDOW_WIDTH) // 2
+    y = (screen_height - WINDOW_HEIGHT) // 2 
+
+    ctypes.windll.user32.MoveWindow(hwnd, x, y, WINDOW_WIDTH, WINDOW_HEIGHT, True)
+
+# =========================
+# Modern GUI setup
+# =========================
+ctk.set_appearance_mode("Dark")
+ctk.set_default_color_theme("blue")
 
 app = ctk.CTk()
-app.geometry("450x550")
 app.title("Cat vs Dog Classifier")
-app.resizable(False, False)
 
-# Title
-title_label = ctk.CTkLabel(app, text="Cat vs Dog Classifier", font=ctk.CTkFont(size=20, weight="bold"))
+WINDOW_WIDTH = 520
+WINDOW_HEIGHT = 950
+app.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+app.resizable(True, True)
+
+# Keyboard shortcuts
+app.bind("<F11>", toggle_fullscreen)
+app.bind("<Escape>", exit_fullscreen)
+
+# =========================
+# UI Elements
+# =========================
+main_frame = ctk.CTkFrame(app)
+main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+title_label = ctk.CTkLabel(
+    main_frame,
+    text="🐱 Cat vs Dog Classifier 🐶",
+    font=ctk.CTkFont(size=22, weight="bold")
+)
 title_label.pack(pady=20)
 
-# Upload Button
-upload_btn = ctk.CTkButton(app, text="Upload Image", command=upload_image, width=200, height=40, corner_radius=10)
+subtitle_label = ctk.CTkLabel(
+    main_frame,
+    text="Upload an image to classify",
+    font=ctk.CTkFont(size=14),
+    text_color="gray"
+)
+subtitle_label.pack(pady=(0,15))
+
+upload_btn = ctk.CTkButton(
+    main_frame,
+    text="Upload Image",
+    width=220,
+    height=45,
+    corner_radius=12,
+    command=upload_image
+)
 upload_btn.pack(pady=10)
 
-# Image display
-img_label = ctk.CTkLabel(app, text="Image Preview", width=300, height=300, corner_radius=10)
+img_label = ctk.CTkLabel(
+    main_frame,
+    text="Image Preview",
+    width=340,
+    height=340,
+    corner_radius=15,
+    fg_color=("gray20","gray15")
+)
 img_label.pack(pady=15)
 
-# Prediction result
-result_label = ctk.CTkLabel(app, text="Prediction will appear here", font=ctk.CTkFont(size=16))
+result_label = ctk.CTkLabel(
+    main_frame,
+    text="Prediction will appear here",
+    font=ctk.CTkFont(size=18)
+)
 result_label.pack(pady=20)
+
+hint_label = ctk.CTkLabel(
+    main_frame,
+    text="F11 = Fullscreen | ESC = Exit",
+    font=ctk.CTkFont(size=12),
+    text_color="gray"
+)
+hint_label.pack(pady=10)
+
+
+app.after(100, center_window)
 
 app.mainloop()
