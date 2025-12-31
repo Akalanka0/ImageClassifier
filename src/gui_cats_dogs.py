@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
+from pathlib import Path
 from PIL import Image, ImageTk
 import tensorflow as tf
 from tensorflow.keras.models import load_model
@@ -9,14 +10,21 @@ import ctypes
 # =========================
 # Load trained model
 # =========================
-model_path = r"D:\Test\ImageClassifier\models\cats_dogs_model.keras"
+BASE_DIR = Path(__file__).resolve().parent.parent
+model_path = BASE_DIR / "models" / "cats_dogs_model.keras"
 
-try:
-    model = load_model(model_path)
-    print("Model loaded successfully")
-except Exception as e:
-    print("Error loading model:", e)
-    exit()
+model = None
+
+def load_model_safely():
+    global model
+    try:
+        model = load_model(model_path)
+        print("Model loaded successfully")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        messagebox.showerror("Model Error", f"Could not load model from:\n{model_path}\n\nPlease train the model or check the path.\n\nError: {e}")
+
+
 
 IMG_WIDTH, IMG_HEIGHT = 160, 160
 
@@ -29,6 +37,10 @@ def predict_image(img_path):
         img = img.resize((IMG_WIDTH, IMG_HEIGHT))
         img_array = np.array(img) / 255.0
         img_array = np.expand_dims(img_array, axis=0)
+
+        if model is None:
+             messagebox.showerror("Error", "Model is not loaded.")
+             return None, None
 
         preds = model.predict(img_array)
         probs = tf.nn.softmax(preds, axis=1).numpy()
@@ -172,5 +184,8 @@ hint_label.pack(pady=10)
 
 
 app.after(100, center_window)
+# Load model after UI is ready to show error if needed
+app.after(500, load_model_safely)
 
-app.mainloop()
+if __name__ == "__main__":
+    app.mainloop()
