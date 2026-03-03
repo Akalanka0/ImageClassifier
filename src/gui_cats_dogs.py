@@ -112,6 +112,10 @@ def center_window():
     y = max((screen_height - window_height) // 2, 0)
 
     app.geometry(f"{window_width}x{window_height}+{x}+{y}")
+    x = (screen_width - WINDOW_WIDTH) // 2
+    y = (screen_height - WINDOW_HEIGHT) // 2
+
+    app.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+{y}")
 
 # =========================
 # Modern GUI setup
