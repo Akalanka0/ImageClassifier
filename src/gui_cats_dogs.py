@@ -5,7 +5,6 @@ from PIL import Image, ImageTk
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import numpy as np
-import ctypes
 
 # =========================
 # Load trained model
@@ -99,14 +98,20 @@ def exit_fullscreen(event=None):
 # Center window 
 # ==============
 def center_window():
-    hwnd = ctypes.windll.user32.GetForegroundWindow()
-    screen_width = ctypes.windll.user32.GetSystemMetrics(0)
-    screen_height = ctypes.windll.user32.GetSystemMetrics(1)
+    app.update_idletasks()
+    screen_width = app.winfo_screenwidth()
+    screen_height = app.winfo_screenheight()
 
-    x = (screen_width - WINDOW_WIDTH) // 2
-    y = (screen_height - WINDOW_HEIGHT) // 2 
+    max_width = max(MIN_WINDOW_WIDTH, screen_width - SCREEN_MARGIN)
+    max_height = max(MIN_WINDOW_HEIGHT, screen_height - SCREEN_MARGIN)
 
-    ctypes.windll.user32.MoveWindow(hwnd, x, y, WINDOW_WIDTH, WINDOW_HEIGHT, True)
+    window_width = min(DESIRED_WINDOW_WIDTH, max_width)
+    window_height = min(DESIRED_WINDOW_HEIGHT, max_height)
+
+    x = max((screen_width - window_width) // 2, 0)
+    y = max((screen_height - window_height) // 2, 0)
+
+    app.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
 # =========================
 # Modern GUI setup
@@ -117,9 +122,13 @@ ctk.set_default_color_theme("blue")
 app = ctk.CTk()
 app.title("Cat vs Dog Classifier")
 
-WINDOW_WIDTH = 520
-WINDOW_HEIGHT = 950
-app.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+DESIRED_WINDOW_WIDTH = 520
+DESIRED_WINDOW_HEIGHT = 950
+MIN_WINDOW_WIDTH = 420
+MIN_WINDOW_HEIGHT = 600
+SCREEN_MARGIN = 80
+
+app.geometry(f"{DESIRED_WINDOW_WIDTH}x{DESIRED_WINDOW_HEIGHT}")
 app.resizable(True, True)
 
 # Keyboard shortcuts
