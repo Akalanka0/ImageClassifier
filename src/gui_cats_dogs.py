@@ -102,6 +102,16 @@ def center_window():
     screen_width = app.winfo_screenwidth()
     screen_height = app.winfo_screenheight()
 
+    max_width = max(MIN_WINDOW_WIDTH, screen_width - SCREEN_MARGIN)
+    max_height = max(MIN_WINDOW_HEIGHT, screen_height - SCREEN_MARGIN)
+
+    window_width = min(DESIRED_WINDOW_WIDTH, max_width)
+    window_height = min(DESIRED_WINDOW_HEIGHT, max_height)
+
+    x = max((screen_width - window_width) // 2, 0)
+    y = max((screen_height - window_height) // 2, 0)
+
+    app.geometry(f"{window_width}x{window_height}+{x}+{y}")
     x = (screen_width - WINDOW_WIDTH) // 2
     y = (screen_height - WINDOW_HEIGHT) // 2
 
@@ -116,9 +126,13 @@ ctk.set_default_color_theme("blue")
 app = ctk.CTk()
 app.title("Cat vs Dog Classifier")
 
-WINDOW_WIDTH = 520
-WINDOW_HEIGHT = 950
-app.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}")
+DESIRED_WINDOW_WIDTH = 520
+DESIRED_WINDOW_HEIGHT = 950
+MIN_WINDOW_WIDTH = 420
+MIN_WINDOW_HEIGHT = 600
+SCREEN_MARGIN = 80
+
+app.geometry(f"{DESIRED_WINDOW_WIDTH}x{DESIRED_WINDOW_HEIGHT}")
 app.resizable(True, True)
 
 # Keyboard shortcuts
