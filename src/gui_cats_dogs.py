@@ -5,7 +5,6 @@ from PIL import Image, ImageTk
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import numpy as np
-import ctypes
 
 # =========================
 # Load trained model
@@ -99,14 +98,14 @@ def exit_fullscreen(event=None):
 # Center window 
 # ==============
 def center_window():
-    hwnd = ctypes.windll.user32.GetForegroundWindow()
-    screen_width = ctypes.windll.user32.GetSystemMetrics(0)
-    screen_height = ctypes.windll.user32.GetSystemMetrics(1)
+    app.update_idletasks()
+    screen_width = app.winfo_screenwidth()
+    screen_height = app.winfo_screenheight()
 
     x = (screen_width - WINDOW_WIDTH) // 2
-    y = (screen_height - WINDOW_HEIGHT) // 2 
+    y = (screen_height - WINDOW_HEIGHT) // 2
 
-    ctypes.windll.user32.MoveWindow(hwnd, x, y, WINDOW_WIDTH, WINDOW_HEIGHT, True)
+    app.geometry(f"{WINDOW_WIDTH}x{WINDOW_HEIGHT}+{x}+{y}")
 
 # =========================
 # Modern GUI setup
