@@ -1,13 +1,10 @@
-import tensorflow as tf
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from tensorflow.keras.preprocessing import image
-import numpy as np
 import argparse
+from pathlib import Path
+
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.preprocessing import image
-import numpy as np
-from pathlib import Path
 
 # -----------------------------
 # Load model
